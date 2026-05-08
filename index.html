@@ -4,18 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historia del Fútbol</title>
+
   <style>
     :root {
-      --bg: #f2f2f2;
+      --bg: rgba(242, 242, 242, 0.88);
       --text: #222;
-      --card: #ffffff;
+      --card: rgba(255, 255, 255, 0.9);
       --primary: #27ae60;
     }
 
     body.dark {
-      --bg: #121212;
+      --bg: rgba(18, 18, 18, 0.88);
       --text: #f2f2f2;
-      --card: #1e1e1e;
+      --card: rgba(30, 30, 30, 0.9);
       --primary: #2ecc71;
     }
 
@@ -27,10 +28,26 @@
     }
 
     body {
-      background: var(--bg);
+      background:
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+        url('https://images.unsplash.com/photo-1575361204480-aadea25e6e68?q=80&w=1400&auto=format&fit=crop');
+      
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+
       color: var(--text);
       padding: 20px;
       transition: all 0.4s ease;
+      min-height: 100vh;
+    }
+
+    .overlay {
+      background: var(--bg);
+      backdrop-filter: blur(5px);
+      border-radius: 20px;
+      padding: 25px;
+      animation: fadeIn 1s ease;
     }
 
     header {
@@ -41,7 +58,9 @@
     }
 
     h1 {
-      font-size: 2.2rem;
+      font-size: 2.5rem;
+      color: white;
+      text-shadow: 0 0 10px #27ae60;
     }
 
     button {
@@ -51,11 +70,13 @@
       padding: 10px 15px;
       border-radius: 10px;
       cursor: pointer;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      font-weight: bold;
     }
 
     button:hover {
       transform: scale(1.05);
+      box-shadow: 0 0 15px var(--primary);
     }
 
     .timeline {
@@ -67,13 +88,15 @@
       background: var(--card);
       padding: 20px;
       border-radius: 15px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
       animation: fadeIn 0.5s ease;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-left: 5px solid var(--primary);
     }
 
     .event-card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 0 20px rgba(39, 174, 96, 0.6);
     }
 
     .event-card h2 {
@@ -81,19 +104,32 @@
       margin-bottom: 10px;
     }
 
+    .event-card p {
+      line-height: 1.6;
+    }
+
     .form-section {
       margin-top: 40px;
       background: var(--card);
       padding: 20px;
       border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
     }
 
     input, textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin: 10px 0;
       border-radius: 8px;
       border: 1px solid #ccc;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
     }
 
     @keyframes fadeIn {
@@ -101,29 +137,51 @@
         opacity: 0;
         transform: translateY(20px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
       }
     }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+    }
   </style>
 </head>
+
 <body>
 
-  <header>
-    <h1>Historia del Fútbol</h1>
-    <button id="toggleTheme">Modo Oscuro</button>
-  </header>
+  <div class="overlay">
 
-  <section class="timeline" id="timeline"></section>
+    <header>
+      <h1>⚽ Historia del Fútbol ⚽</h1>
+      <button id="toggleTheme">Modo Oscuro</button>
+    </header>
 
-  <section class="form-section">
-    <h2>Agregar Evento Histórico</h2>
-    <input type="text" id="year" placeholder="Año o época">
-    <input type="text" id="title" placeholder="Título del evento">
-    <textarea id="description" placeholder="Descripción"></textarea>
-    <button id="addEvent">Agregar</button>
-  </section>
+    <section class="timeline" id="timeline"></section>
+
+    <section class="form-section">
+      <h2>Agregar Evento Histórico</h2>
+
+      <input type="text" id="year" placeholder="Año o época">
+
+      <input type="text" id="title" placeholder="Título del evento">
+
+      <textarea id="description" placeholder="Descripción"></textarea>
+
+      <button id="addEvent">Agregar</button>
+    </section>
+
+  </div>
 
   <script>
     const defaultEvents = [
@@ -159,31 +217,54 @@
       }
     ];
 
-    let footballHistory = JSON.parse(localStorage.getItem("footballHistory")) || defaultEvents;
+    let footballHistory =
+      JSON.parse(localStorage.getItem("footballHistory"))
+      || defaultEvents;
 
     const timeline = document.getElementById("timeline");
 
     function renderTimeline() {
       timeline.innerHTML = "";
+
       footballHistory.forEach(event => {
         const card = document.createElement("div");
+
         card.classList.add("event-card");
+
         card.innerHTML = `
           <h2>${event.year} - ${event.title}</h2>
           <p>${event.description}</p>
         `;
+
         timeline.appendChild(card);
       });
     }
 
-    document.getElementById("addEvent").addEventListener("click", () => {
-      const year = document.getElementById("year").value;
-      const title = document.getElementById("title").value;
-      const description = document.getElementById("description").value;
+    document.getElementById("addEvent")
+      .addEventListener("click", () => {
+
+      const year =
+        document.getElementById("year").value;
+
+      const title =
+        document.getElementById("title").value;
+
+      const description =
+        document.getElementById("description").value;
 
       if (year && title && description) {
-        footballHistory.push({ year, title, description });
-        localStorage.setItem("footballHistory", JSON.stringify(footballHistory));
+
+        footballHistory.push({
+          year,
+          title,
+          description
+        });
+
+        localStorage.setItem(
+          "footballHistory",
+          JSON.stringify(footballHistory)
+        );
+
         renderTimeline();
 
         document.getElementById("year").value = "";
@@ -192,7 +273,9 @@
       }
     });
 
-    document.getElementById("toggleTheme").addEventListener("click", () => {
+    document.getElementById("toggleTheme")
+      .addEventListener("click", () => {
+
       document.body.classList.toggle("dark");
     });
 
